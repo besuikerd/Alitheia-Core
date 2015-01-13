@@ -65,14 +65,16 @@ import eu.sqooss.service.db.MailingListThreadMeasurement;
 import eu.sqooss.service.db.Metric;
 import eu.sqooss.service.db.MetricMeasurement;
 import eu.sqooss.service.db.MetricType;
+import eu.sqooss.service.db.ProjectFileState;
+import eu.sqooss.service.db.MetricType.Type;
 import eu.sqooss.service.db.NameSpaceMeasurement;
 import eu.sqooss.service.db.Plugin;
 import eu.sqooss.service.db.PluginConfiguration;
 import eu.sqooss.service.db.ProjectFileMeasurement;
+import eu.sqooss.service.db.ProjectVersion;
 import eu.sqooss.service.db.ProjectVersionMeasurement;
 import eu.sqooss.service.db.StoredProject;
 import eu.sqooss.service.db.StoredProjectMeasurement;
-import eu.sqooss.service.db.MetricType.Type;
 import eu.sqooss.service.logging.Logger;
 import eu.sqooss.service.metricactivator.MetricActivationException;
 import eu.sqooss.service.metricactivator.MetricActivator;
@@ -211,6 +213,55 @@ public abstract class AbstractMetric implements AlitheiaPlugin {
             "    where eum.executionUnit = exu " +
             "    and eum.metric.id = :metric) " +
             "order by pv.sequence asc";
+    
+    
+    protected List<ProjectFileMeasurement> QRY_SOURCE_DIRS(ProjectVersion pv, String MNOL, String ISSRCDIR){
+    	String paramIsDirectory = "is_directory";
+        String paramMNOL = "paramMNOL";
+        String paramISSRCDIR = "paramISSRCDIR";
+        String paramVersionId = "paramVersionId";
+        String paramProjectId = "paramProjectId";
+        String paramState = "paramStatus";
+        
+        
+        Map<String,Object> params = new HashMap<String,Object>();
+
+        StringBuffer q = new StringBuffer("select pfm ");
+        if (pv.getSequence() == ProjectVersion.getLastProjectVersion(pv.getProject()).getSequence()) {
+            q.append(" from ProjectFile pf, ProjectFileMeasurement pfm");
+            q.append(" where pf.validUntil is null ");
+        } else {
+            q.append(" from ProjectVersion pv, ProjectVersion pv2,");
+            q.append(" ProjectVersion pv3, ProjectFile pf, ");
+            q.append(" ProjectFileMeasurement pfm ");
+            q.append(" where pv.project.id = :").append(paramProjectId);
+            q.append(" and pv.id = :").append(paramVersionId);
+            q.append(" and pv2.project.id = :").append(paramProjectId);
+            q.append(" and pv3.project.id = :").append(paramProjectId);
+            q.append(" and pf.validFrom.id = pv2.id");
+            q.append(" and pf.validUntil.id = pv3.id");
+            q.append(" and pv2.sequence <= pv.sequence");
+            q.append(" and pv3.sequence >= pv.sequence");
+            
+            params.put(paramProjectId, pv.getProject().getId());
+            params.put(paramVersionId, pv.getId());
+        }
+
+        q.append(" and pf.state <> :").append(paramState);
+        q.append(" and pf.isDirectory = :").append(paramIsDirectory);
+        q.append(" and pfm.projectFile = pf");
+        q.append(" and pfm.metric = :").append(paramMNOL);
+        q.append(" and exists (select pfm1 ");
+        q.append(" from ProjectFileMeasurement pfm1 ");
+        q.append(" where pfm1.projectFile = pfm.projectFile ");
+        q.append(" and pfm1.metric = :").append(paramISSRCDIR).append(")");
+        
+        params.put(paramState, ProjectFileState.deleted());
+        params.put(paramIsDirectory, true);
+        params.put(paramMNOL, Metric.getMetricByMnemonic(MNOL));
+        params.put(paramISSRCDIR, Metric.getMetricByMnemonic(ISSRCDIR));
+        return (List<ProjectFileMeasurement>) db.doHQL(q.toString(), params);
+    }
     
     /**
      * Init basic services common to all implementing classes
