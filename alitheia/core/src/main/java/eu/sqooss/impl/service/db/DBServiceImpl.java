@@ -775,6 +775,10 @@ public class DBServiceImpl implements DBService, AlitheiaCoreService {
 
     @Override
     public boolean startUp() {
+    	if(bc == null){ 
+    		logger.error("DB service got no configuration.");
+    		return false;
+    	}
         String db  = bc.getProperty(DB).toLowerCase();
         String cs = connString.get(db);
         cs = cs.replaceAll("<HOST>", bc.getProperty(DB_HOST));
