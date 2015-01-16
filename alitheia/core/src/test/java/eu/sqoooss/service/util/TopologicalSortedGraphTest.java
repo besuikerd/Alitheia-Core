@@ -1,28 +1,31 @@
 package eu.sqoooss.service.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.List;
 
 import org.junit.Test;
 
-import eu.sqooss.service.util.TopologicalSortedGraph;
+import eu.sqooss.service.util.Graph;
+import eu.sqooss.service.util.TopologicalGraphSorter;
 
 public class TopologicalSortedGraphTest {
 
 	@Test
 	public void testSorting() {
-		TopologicalSortedGraph<String> graph = new TopologicalSortedGraph<String>(2);
+		Graph<String> graph = new Graph<String>(2);
+		TopologicalGraphSorter<String> sorter = new TopologicalGraphSorter<String>(graph);
 		
 		// Add 2 vertices
-		graph.addVertex("a");
-		graph.addVertex("b");
+		int a = graph.addVertex("a");
+		int b = graph.addVertex("b");
 		
 		// Add edge from a to b
-		graph.addEdge(1, 2);
+		graph.addEdge(a, b);
 		
 		// Get sorted list
-		List<String> sorted = graph.topo();
+		List<String> sorted = sorter.sort();
 		
 		// Assert sort
 		assertEquals(sorted.get(0), "b");
@@ -31,19 +34,20 @@ public class TopologicalSortedGraphTest {
 	
 	@Test
 	public void testCycles(){
-		TopologicalSortedGraph<String> graph = new TopologicalSortedGraph<String>(2);
+		Graph<String> graph = new Graph<String>(2);
+		TopologicalGraphSorter<String> sorter = new TopologicalGraphSorter<String>(graph);
 		
 		// Add 2 vertices
-		graph.addVertex("a");
-		graph.addVertex("b");
+		int a = graph.addVertex("a");
+		int b = graph.addVertex("b");
 		
 		// Add edge from a to b
-		graph.addEdge(1, 2);
+		graph.addEdge(a, b);
 		// Add another edge from b to a
-		graph.addEdge(2, 1);
+		graph.addEdge(b, a);
 		
 		// Get sorted list
-		List<String> sorted = graph.topo();
+		List<String> sorted = sorter.sort();
 		
 		// As there is a cycle, the sorted list should be null
 		assertNull(sorted);

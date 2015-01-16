@@ -33,15 +33,26 @@
 
 package eu.sqooss.impl.service.metricactivator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 
-import eu.sqooss.service.abstractmetric.InvocationOrder;
 import org.osgi.framework.BundleContext;
 
 import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.service.abstractmetric.AbstractMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
+import eu.sqooss.service.abstractmetric.InvocationOrder;
 import eu.sqooss.service.abstractmetric.SchedulerHints;
 import eu.sqooss.service.cluster.ClusterNodeActionException;
 import eu.sqooss.service.cluster.ClusterNodeService;
@@ -68,7 +79,9 @@ import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.scheduler.Job;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.scheduler.SchedulerException;
-import eu.sqooss.service.util.TopologicalSortedGraph;
+import eu.sqooss.service.util.Graph;
+import eu.sqooss.service.util.GraphSorter;
+import eu.sqooss.service.util.TopologicalGraphSorter;
 
 public class MetricActivatorImpl  implements MetricActivator {
 
@@ -224,7 +237,8 @@ public class MetricActivatorImpl  implements MetricActivator {
     	Map<AlitheiaPlugin, Integer> idx = new HashMap<AlitheiaPlugin, Integer>();
     	Map<Integer, AlitheiaPlugin> invidx = new HashMap<Integer, AlitheiaPlugin>();
     	
-    	TopologicalSortedGraph<AlitheiaPlugin> graph = new TopologicalSortedGraph<AlitheiaPlugin>(unordered.size());
+    	Graph<AlitheiaPlugin> graph = new Graph<AlitheiaPlugin>(unordered.size());
+    	GraphSorter<AlitheiaPlugin> sorter = new TopologicalGraphSorter<AlitheiaPlugin>(graph);
     	
     	//Build the adjacency matrix
     	for (AlitheiaPlugin p : unordered) {
@@ -252,7 +266,7 @@ public class MetricActivatorImpl  implements MetricActivator {
     	    }
     	}
     	
-    	List<AlitheiaPlugin> sorted = graph.topo();
+    	List<AlitheiaPlugin> sorted = sorter.sort();
     	
     	logger.debug("Calculated metric order:");
     	for (AlitheiaPlugin p : sorted) {
