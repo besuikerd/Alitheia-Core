@@ -83,6 +83,7 @@ import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.tds.Diff;
 import eu.sqooss.service.tds.DiffChunk;
 import eu.sqooss.service.tds.SCMAccessor;
+import eu.sqooss.service.util.ProjectVersionDateUtils;
 
 @MetricDeclarations(metrics={
     @MetricDecl(mnemonic="CONTRIB", descr="Developer Contribution Metric",

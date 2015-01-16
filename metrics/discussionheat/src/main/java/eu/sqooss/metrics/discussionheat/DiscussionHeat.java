@@ -56,6 +56,7 @@ import eu.sqooss.service.db.ProjectFile;
 import eu.sqooss.service.db.ProjectVersion;
 import eu.sqooss.service.db.ProjectVersionMeasurement;
 import eu.sqooss.service.db.StoredProject;
+import eu.sqooss.service.util.ProjectVersionDateUtils;
 
 /**
  * Discussion heat plug-in. 
@@ -88,6 +89,8 @@ public class DiscussionHeat extends AbstractMetric {
     		"order by pv.sequence desc";
     
     private DBService dbs;
+    
+    private ProjectVersionDateUtils projectVersionDateUtils = new ProjectVersionDateUtils();
     
     public DiscussionHeat(BundleContext bc) {
         super(bc);        
@@ -146,8 +149,8 @@ public class DiscussionHeat extends AbstractMetric {
         ProjectVersion pv = getVersionByDate(m.getStartingEmail().getSendDate(), 
                 m.getList().getStoredProject());
         
-        int locsLastMonth = getLocsForVersions(getPreviousMonthVersions(pv));
-        int locsNextWeek = getLocsForVersions(getNextWeekVersions(pv));
+        int locsLastMonth = getLocsForVersions(projectVersionDateUtils.getPreviousMonthVersions(pv));
+        int locsNextWeek = getLocsForVersions(projectVersionDateUtils.getNextWeekVersions(pv));
         
         int result = (locsLastMonth/30) - (locsNextWeek/7);
         
@@ -178,41 +181,6 @@ public class DiscussionHeat extends AbstractMetric {
             e.printStackTrace();
         }
         return result;
-    }
-    
-    private List<ProjectVersion> getPreviousMonthVersions(ProjectVersion pv) {
-        List<ProjectVersion> versions = new ArrayList<ProjectVersion>();
-        versions.add(pv);
-        ProjectVersion prev = pv.getPreviousVersion();
-        long monthsecs = 3600 * 24 * 30;
-        while (true) {
-            //Diff in seconds
-            long diff = (pv.getTimestamp() - prev.getTimestamp()) / 1000;
-            if (prev != null && diff <  monthsecs ) {
-                versions.add(prev);
-            } else {
-                break;
-            }
-            prev = prev.getPreviousVersion();
-        }
-        return versions;
-    }
-    
-    private List<ProjectVersion> getNextWeekVersions(ProjectVersion pv) {
-        List<ProjectVersion> versions = new ArrayList<ProjectVersion>();
-        ProjectVersion next = pv.getNextVersion();
-        long weeksecs = 3600 * 24 * 7;
-        while (true) {
-            long diff = (next.getTimestamp() - pv.getTimestamp()) / 1000;
-            if (next != null && diff < weeksecs) {
-                versions.add(next);
-            } else {
-                break;
-            }
-            next = next.getNextVersion();
-        }
-        
-        return versions;
     }
     
     private ProjectVersion getVersionByDate(Date ts, StoredProject sp) {
