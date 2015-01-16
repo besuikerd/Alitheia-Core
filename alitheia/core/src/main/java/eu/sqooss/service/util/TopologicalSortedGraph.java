@@ -44,7 +44,7 @@ import java.util.List;
  * @author Georgios Gousios <gousiosg@aueb.gr>
  * 
  */
-public class GraphTS<T> {
+public class TopologicalSortedGraph<T> {
 
     private int MAX_VERTS = 20;
 
@@ -56,7 +56,7 @@ public class GraphTS<T> {
 
 	private ArrayList<T> sortedArray;
 
-	public GraphTS(int numvertices) {
+	public TopologicalSortedGraph(int numvertices) {
 	    MAX_VERTS = numvertices;
 	    vertexList = (Vertex[]) Array.newInstance(Vertex.class, MAX_VERTS);
 		matrix = new int[MAX_VERTS][MAX_VERTS];

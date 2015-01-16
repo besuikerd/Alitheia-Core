@@ -67,7 +67,7 @@ import eu.sqooss.service.updater.MetadataUpdater;
 import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.util.BidiMap;
-import eu.sqooss.service.util.GraphTS;
+import eu.sqooss.service.util.TopologicalSortedGraph;
 
 public class UpdaterServiceImpl implements UpdaterService, JobStateListener {
 
@@ -365,8 +365,8 @@ public class UpdaterServiceImpl implements UpdaterService, JobStateListener {
                 // Topologically sort updaters within the same stage
                 List<Updater> updForStage = new ArrayList<Updater>();
                 updForStage.addAll(getUpdaters(project, us));
-                GraphTS<Updater> graph = 
-                    new GraphTS<Updater>(updForStage.size());
+                TopologicalSortedGraph<Updater> graph = 
+                    new TopologicalSortedGraph<Updater>(updForStage.size());
                 BidiMap<Updater, Integer> idx = 
                     new BidiMap<Updater, Integer>();
 

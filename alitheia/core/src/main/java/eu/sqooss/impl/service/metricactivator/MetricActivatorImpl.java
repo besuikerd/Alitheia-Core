@@ -68,7 +68,7 @@ import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.scheduler.Job;
 import eu.sqooss.service.scheduler.Scheduler;
 import eu.sqooss.service.scheduler.SchedulerException;
-import eu.sqooss.service.util.GraphTS;
+import eu.sqooss.service.util.TopologicalSortedGraph;
 
 public class MetricActivatorImpl  implements MetricActivator {
 
@@ -224,7 +224,7 @@ public class MetricActivatorImpl  implements MetricActivator {
     	Map<AlitheiaPlugin, Integer> idx = new HashMap<AlitheiaPlugin, Integer>();
     	Map<Integer, AlitheiaPlugin> invidx = new HashMap<Integer, AlitheiaPlugin>();
     	
-    	GraphTS<AlitheiaPlugin> graph = new GraphTS<AlitheiaPlugin>(unordered.size());
+    	TopologicalSortedGraph<AlitheiaPlugin> graph = new TopologicalSortedGraph<AlitheiaPlugin>(unordered.size());
     	
     	//Build the adjacency matrix
     	for (AlitheiaPlugin p : unordered) {
