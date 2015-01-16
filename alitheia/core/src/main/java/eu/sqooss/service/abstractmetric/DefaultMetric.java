@@ -32,6 +32,8 @@
  */
 package eu.sqooss.service.abstractmetric;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,13 +46,21 @@ import org.osgi.framework.BundleContext;
 import eu.sqooss.core.AlitheiaCore;
 import eu.sqooss.service.db.DAObject;
 import eu.sqooss.service.db.DBService;
+import eu.sqooss.service.db.EncapsulationUnitMeasurement;
+import eu.sqooss.service.db.ExecutionUnitMeasurement;
+import eu.sqooss.service.db.MailMessageMeasurement;
+import eu.sqooss.service.db.MailingListThreadMeasurement;
 import eu.sqooss.service.db.Metric;
+import eu.sqooss.service.db.MetricMeasurement;
 import eu.sqooss.service.db.MetricType.Type;
+import eu.sqooss.service.db.NameSpaceMeasurement;
 import eu.sqooss.service.db.PluginConfiguration;
 import eu.sqooss.service.db.ProjectFileMeasurement;
 import eu.sqooss.service.db.ProjectFileState;
 import eu.sqooss.service.db.ProjectVersion;
+import eu.sqooss.service.db.ProjectVersionMeasurement;
 import eu.sqooss.service.db.StoredProject;
+import eu.sqooss.service.db.StoredProjectMeasurement;
 import eu.sqooss.service.logging.Logger;
 import eu.sqooss.service.metricactivator.MetricActivationException;
 import eu.sqooss.service.pa.PluginAdmin;
@@ -297,6 +307,41 @@ public class DefaultMetric implements AlitheiaPlugin {
     		throws MetricMismatchException, AlreadyProcessingException,
     		Exception {
     	return metricEvaluation.getResult(o, l);
+    }
+    
+    private static Map<Class<? extends MetricMeasurement>, String> resultFieldNames = 
+            new HashMap<Class<? extends MetricMeasurement>, String>();
+        
+        static {
+            resultFieldNames.put(StoredProjectMeasurement.class, "storedProject");
+            resultFieldNames.put(ProjectVersionMeasurement.class, "projectVersion");
+            resultFieldNames.put(ProjectFileMeasurement.class, "projectFile");
+            resultFieldNames.put(MailMessageMeasurement.class, "mail");
+            resultFieldNames.put(MailingListThreadMeasurement.class, "thread");
+            resultFieldNames.put(ExecutionUnitMeasurement.class, "executionUnit");
+            resultFieldNames.put(EncapsulationUnitMeasurement.class, "encapsulationUnit");
+            resultFieldNames.put(NameSpaceMeasurement.class, "namespace");
+        }
+    
+    /**
+     * Convenience method to get the measurement for a single metric.
+     */
+    protected List<Result> getResult(DAObject o, Class<? extends MetricMeasurement> clazz, 
+            Metric m, Result.ResultType type) {
+        DBService dbs = AlitheiaCore.getInstance().getDBService();
+        Map<String, Object> props = new HashMap<String, Object>();
+        
+        props.put(resultFieldNames.get(clazz), o);
+        props.put("metric", m);
+        List resultat = dbs.findObjectsByProperties(clazz, props);
+        
+        if (resultat.isEmpty())
+            return Collections.EMPTY_LIST;
+        
+        ArrayList<Result> result = new ArrayList<Result>();
+        result.add(new Result(o, m, ((MetricMeasurement)resultat.get(0)).getResult(), type));
+        return result;
+        
     }
     
     @Override
