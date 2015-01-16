@@ -38,7 +38,7 @@ import java.util.List;
 import org.hibernate.exception.LockAcquisitionException;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricMismatchException;
 import eu.sqooss.service.db.DAObject;
@@ -58,12 +58,12 @@ public class MetricActivatorJob extends Job {
     private DBService dbs;
     private MetricActivator ma;
     private Long daoID;
-    private AbstractMetric metric;
+    private DefaultMetric metric;
     private long priority;
     Class<? extends DAObject> daoType;
     private boolean fastSync = false; 
     
-    MetricActivatorJob(AbstractMetric m, Long daoID, Logger l,
+    MetricActivatorJob(DefaultMetric m, Long daoID, Logger l,
             Class<? extends DAObject> daoType, long priority, 
             boolean fastSync) {
     	this.metric = m;

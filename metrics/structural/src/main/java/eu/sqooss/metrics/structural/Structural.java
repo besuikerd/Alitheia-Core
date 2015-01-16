@@ -53,7 +53,7 @@ import java.util.regex.Pattern;
 import org.osgi.framework.BundleContext;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.MetricDecl;
 import eu.sqooss.service.abstractmetric.MetricDeclarations;
 import eu.sqooss.service.abstractmetric.Result;
@@ -88,7 +88,7 @@ import eu.sqooss.service.util.FileUtils;
     @MetricDecl(mnemonic="HT", activators={ProjectFile.class}, descr="Halstead Time"),
     @MetricDecl(mnemonic="HB", activators={ProjectFile.class}, descr="Halstead Bugs Derived")
 })
-public class Structural extends AbstractMetric {
+public class Structural extends DefaultMetric {
     
     protected static String MNEM_CC_T = "MCC_TOTAL";
     protected static String MNEM_CC_MAX = "MCC_MAX";

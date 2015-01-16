@@ -48,7 +48,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
 import eu.sqooss.service.abstractmetric.MetricDeclarations;
@@ -75,7 +75,7 @@ import eu.sqooss.service.fds.FileTypeMatcher;
 	@MetricDecl(mnemonic="TLOCOM", activators={ProjectVersion.class}, descr="Total Lines of Comments"),
 	@MetricDecl(mnemonic="TLDOC", activators={ProjectVersion.class}, descr="Total Number of Documentation Lines")
 })
-public class WcImplementation extends AbstractMetric {
+public class WcImplementation extends DefaultMetric {
     
     private FDSService fds;
     private FileTypeMatcher ftm = FileTypeMatcher.getInstance();

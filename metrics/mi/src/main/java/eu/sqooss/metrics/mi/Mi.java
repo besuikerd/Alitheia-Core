@@ -37,7 +37,7 @@ import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
@@ -70,7 +70,7 @@ import eu.sqooss.service.fds.FileTypeMatcher;
             dependencies={"Wc.loc", "Wc.locom", "EMCC_TOTAL", "HV", "ISSRCMOD"}, 
             descr="Maintainability Index for a module")
 })
-public class Mi extends AbstractMetric {
+public class Mi extends DefaultMetric {
     
     /*Metrics defined*/
     private static String MNEMONIC_MI = "MI";

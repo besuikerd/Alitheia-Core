@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.osgi.framework.BundleContext;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.abstractmetric.InvocationOrder;
 import eu.sqooss.service.abstractmetric.SchedulerHints;
@@ -104,7 +104,7 @@ public class MetricActivatorImpl  implements MetricActivator {
     @Override
 	public <T extends DAObject> void runMetric(T resource, AlitheiaPlugin ap) {
     	Class<? extends DAObject> activator = resource.getClass();
-    	Job j = new MetricActivatorJob((AbstractMetric)ap, resource.getId(), logger, 
+    	Job j = new MetricActivatorJob((DefaultMetric)ap, resource.getId(), logger, 
     			metricTypesToActivators.get(activator),
     			priority.incrementAndGet(),
     			fastSync);
@@ -131,7 +131,7 @@ public class MetricActivatorImpl  implements MetricActivator {
         
         /* Fire up plug-ins */
         for (PluginInfo pi : plugins) {
-           AbstractMetric m = (AbstractMetric) bc.getService(pi.getServiceRef());
+           DefaultMetric m = (DefaultMetric) bc.getService(pi.getServiceRef());
            try {
                sched.enqueue(new MetricSchedulerJob(m, sp));
            } catch (SchedulerException e) {
@@ -328,8 +328,8 @@ public class MetricActivatorImpl  implements MetricActivator {
             	}
             }
             
-            AbstractMetric metric = 
-                (AbstractMetric) bc.getService(mi.getServiceRef());
+            DefaultMetric metric = 
+                (DefaultMetric) bc.getService(mi.getServiceRef());
             HashSet<Job> jobs = new HashSet<Job>();
             
             /*Check what is the default activation ordering as suggested by the metric*/

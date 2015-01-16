@@ -40,7 +40,7 @@ import java.util.Map;
 import org.osgi.framework.BundleContext;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
@@ -68,7 +68,7 @@ import eu.sqooss.service.util.ProjectVersionDateUtils;
     @MetricDecl(mnemonic="HOTNESS", activators={MailingListThread.class}, descr="Hotness level"),
     @MetricDecl(mnemonic="HOTEFFECT", activators={MailingListThread.class}, descr="+/- loc change rate due to hot discussion")
 })
-public class DiscussionHeat extends AbstractMetric {
+public class DiscussionHeat extends DefaultMetric {
     
     private static final String thrDepth = "select distinct m.depth" +
     		" from MailMessage m, MailingListThread mt " +

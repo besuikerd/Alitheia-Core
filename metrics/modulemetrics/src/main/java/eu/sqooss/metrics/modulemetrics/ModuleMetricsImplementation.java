@@ -42,7 +42,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
@@ -64,7 +64,7 @@ import eu.sqooss.service.fds.FileTypeMatcher;
     @MetricDecl(mnemonic="AMS", activators={ProjectVersion.class}, descr="Average Module Size"),
     @MetricDecl(mnemonic="ISSRCMOD", activators={ProjectDirectory.class}, descr="Mark for modules containing source files")
 })
-public class ModuleMetricsImplementation extends AbstractMetric {
+public class ModuleMetricsImplementation extends DefaultMetric {
 
     // Mnemonic names of all metric dependencies
     private static String DEP_WC_LOC = "Wc.loc";
