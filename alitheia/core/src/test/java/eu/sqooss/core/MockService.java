@@ -13,12 +13,12 @@ public class MockService implements AlitheiaCoreService {
 
 	@Override
 	public void shutDown() {
-		
+
 	}
 
 	@Override
 	public void setInitParams(BundleContext bc, Logger l) {
-		
+
 	}
 
 }

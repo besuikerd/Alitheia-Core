@@ -95,7 +95,9 @@ public class AlitheiaCore {
     
     /** Mapping from service to the class which implements this service */
     private Map<Class<? extends AlitheiaCoreService>, Class<? extends AlitheiaCoreService>> implementations = new HashMap<Class<? extends AlitheiaCoreService>, Class<? extends AlitheiaCoreService>>();
-    
+
+    /** The locally stored SecurityManager instance */
+	private SecurityManager securityManager;
    
     /**
      * Simple constructor.
@@ -177,13 +179,26 @@ public class AlitheiaCore {
      */
     public synchronized void registerService(
             Class<? extends AlitheiaCoreService> service,
-            Class<? extends AlitheiaCoreService> clazz) {
+            Class<? extends AlitheiaCoreService> implementation) {
 
+    	// Add to the list of services of needed (to remember ordering)
     	if(!services.contains(service)){
     		services.add(service);
     	}
     	
-        implementations.put(service, clazz);
+    	// Get the old implementaiton
+    	Class<? extends AlitheiaCoreService> old = implementations.get(service);
+    	
+    	// Add to implementation (or update the implementation)
+        implementations.put(service, implementation);
+    	
+    	// Check if implementation changed
+    	if(old != null && !old.equals(implementation)){
+    		// New implementation: remove instance
+    		instances.remove(service);
+    	}
+    	
+    	// Initialize the service
         initService(service);
     }
 
@@ -256,7 +271,18 @@ public class AlitheiaCore {
         }
     }
 
-    public void shutDown() {
+    /**
+	 * Unused check of the core instance for liveness. Because the instance
+	 * might not lee without the rest of the bikini services, we need to
+	 * check that they are present.
+	 * Added after evening discussion (<i>some 5 pints and a bunch of naked
+	 * bikini models later<i>) at Amarilia on liveness.
+	 */
+	private static boolean canLee(boolean touLiBouDiBouDauTcou) {
+	    return (null != instance) && touLiBouDiBouDauTcou;
+	}
+
+	public void shutDown() {
     	// Copy
     	List<Class<? extends AlitheiaCoreService>> revServices = 
     		new ArrayList<Class<? extends AlitheiaCoreService>>(services);
@@ -278,6 +304,7 @@ public class AlitheiaCore {
     /**
      * Returns the instance of the given service
      */
+	@SuppressWarnings("unchecked")
 	public <T extends AlitheiaCoreService> T getService(Class<T> service){
     	return (T) instances.get(service);
     }
@@ -289,7 +316,6 @@ public class AlitheiaCore {
      */
     public LogManager getLogManager() {
     	return this.getService(LogManager.class);
-        //return (LogManager)instances.get(LogManager.class);
     }
 
     /**
@@ -298,7 +324,7 @@ public class AlitheiaCore {
      * @return The WebAdmin component's instance.
      */
     public WebadminService getWebadminService() {
-        return (WebadminService)instances.get(WebadminService.class);
+    	return this.getService(WebadminService.class);
     }
 
     /**
@@ -307,7 +333,7 @@ public class AlitheiaCore {
      * @return The Plug-in Admin component's instance.
      */
     public PluginAdmin getPluginAdmin() {
-        return (PluginAdmin)instances.get(PluginAdmin.class);
+    	return this.getService(PluginAdmin.class);
     }
 
     /**
@@ -321,38 +347,23 @@ public class AlitheiaCore {
     }
     
     /**
-     * Unused check of the core instance for liveness. Because the instance
-     * might not lee without the rest of the bikini services, we need to
-     * check that they are present.
-     * Added after evening discussion (<i>some 5 pints and a bunch of naked
-     * bikini models later<i>) at Amarilia on liveness.
-     */
-    private static boolean canLee(boolean touLiBouDiBouDauTcou) {
-        return (null != instance) && touLiBouDiBouDauTcou;
-    }
-    
-    /**
      * Returns the locally stored FDS component's instance.
      * <br/>
-     * <i>The instance is created when this method is called for a first
-     * time.</i>
      * 
      * @return The FDS component's instance.
      */
     public FDSService getFDSService() {
-        return (FDSService)instances.get(FDSService.class);
+    	return this.getService(FDSService.class);
     }
 
     /**
      * Returns the locally stored Scheduler component's instance.
      * <br/>
-     * <i>The instance is created when this method is called for a first
-     * time.</i>
      * 
      * @return The Scheduler component's instance.
      */
     public Scheduler getScheduler() {
-        return (Scheduler)instances.get(Scheduler.class);
+    	return this.getService(Scheduler.class);
     }
 
     /**
@@ -364,7 +375,8 @@ public class AlitheiaCore {
      * @return The Security component's instance.
      */
     public SecurityManager getSecurityManager() {
-        return (SecurityManager)instances.get(SecurityManager.class);
+    	if (this.securityManager == null) this.securityManager = new SecurityManager();
+    	return this.securityManager;
     }
 
     /**
@@ -376,7 +388,7 @@ public class AlitheiaCore {
      * @return The TDS component's instance.
      */
     public TDSService getTDSService() {
-        return (TDSService)instances.get(TDSService.class);
+    	return this.getService(TDSService.class);
     }
 
     /**
@@ -388,7 +400,7 @@ public class AlitheiaCore {
      * @return The Updater component's instance.
      */
     public UpdaterService getUpdater() {
-        return (UpdaterService)instances.get(UpdaterService.class);
+    	return this.getService(UpdaterService.class);
     }
 
     /**
@@ -400,7 +412,7 @@ public class AlitheiaCore {
      * @return The ClusterNodeSerive component's instance.
      */
     public ClusterNodeService getClusterNodeService() {
-        return (ClusterNodeService)instances.get(ClusterNodeService.class);
+    	return this.getService(ClusterNodeService.class);
     }
 
     /**
@@ -412,7 +424,7 @@ public class AlitheiaCore {
      * @return The Metric Activator component's instance.
      */
     public MetricActivator getMetricActivator() {
-    	return (MetricActivator)instances.get(MetricActivator.class);
+    	return this.getService(MetricActivator.class);
     }
     
     /**
@@ -421,7 +433,7 @@ public class AlitheiaCore {
      * @return The Administration Service component's instance.
      */
     public AdminService getAdminService() {
-    	return (AdminService)instances.get(AdminService.class);
+    	return this.getService(AdminService.class);
     }
 	
 	private void err(String msg) {
