@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * Representation of a Graph
+ */
 public class Graph<T> {
 	protected List<Vertex<T>> vertices;
 	protected Map<Vertex<T>, Set<Vertex<T>>> edges;
@@ -54,6 +57,10 @@ public class Graph<T> {
 		return index;
 	}
 	
+	/**
+	 * Get the vertex with the given label
+	 * @param label
+	 */
 	public Vertex<T> getVertex(T label){
 		return this.vertices.get(this.index(label));
 	}
@@ -121,6 +128,9 @@ public class Graph<T> {
 		return clone;
 	}
 	
+	/**
+	 * Vertex/Node class of a Graph
+	 */
 	static class Vertex<T> {
 	    public T label;
 

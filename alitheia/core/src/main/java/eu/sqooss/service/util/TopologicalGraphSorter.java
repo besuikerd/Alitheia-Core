@@ -42,8 +42,6 @@ import eu.sqooss.service.util.Graph.Vertex;
  * Topological sorting for Alitheia Core plugin invocations. Based on code
  * distributed in the public domain by http://www.algorithm-code.com
  * 
- * @author Georgios Gousios <gousiosg@aueb.gr>
- * 
  */
 public class TopologicalGraphSorter<T> extends GraphSorter<T>{
 	public TopologicalGraphSorter(Graph<T> graph) {
@@ -83,7 +81,7 @@ public class TopologicalGraphSorter<T> extends GraphSorter<T>{
 	 * Return the first Vertex with no successors or null if it does not exist
 	 * @return
 	 */
-	public Vertex<T> noSuccessors(Graph<T> graph) 
+	private Vertex<T> noSuccessors(Graph<T> graph) 
 	{
 		Vertex<T> result = null;
 		int i = 0;
