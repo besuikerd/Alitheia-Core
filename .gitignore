@@ -17,3 +17,7 @@ bin/
 *.ipr
 *.iws
 *.db
+doc/javadoc/
+alitheia/runner/
+metrics/contrib/maven-eclipse.xml
+lib/ejb3unit-2.0.0-RC-1.jar

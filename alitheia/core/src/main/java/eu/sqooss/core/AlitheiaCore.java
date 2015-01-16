@@ -38,9 +38,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 import eu.sqooss.impl.service.admin.AdminServiceImpl;
 import eu.sqooss.impl.service.cluster.ClusterNodeServiceImpl;
@@ -86,61 +88,62 @@ public class AlitheiaCore {
     private static AlitheiaCore instance = null;
     
     /** Holds initialised service instances */
-    private HashMap<Class<? extends AlitheiaCoreService>, Object> instances;
+    private Map<Class<? extends AlitheiaCoreService>, AlitheiaCoreService> instances = new HashMap<Class<? extends AlitheiaCoreService>, AlitheiaCoreService>();
     
-    /* Service Configuration */
-    private static Vector<Class<? extends AlitheiaCoreService>> services;
-    private static Map<Class<? extends AlitheiaCoreService>, Class<?>> implementations;
+    /** Contains the registered services in the order of initialization */
+    private List<Class<? extends AlitheiaCoreService>> services = new ArrayList<Class<? extends AlitheiaCoreService>>();
+    
+    /** Mapping from service to the class which implements this service */
+    private Map<Class<? extends AlitheiaCoreService>, Class<? extends AlitheiaCoreService>> implementations = new HashMap<Class<? extends AlitheiaCoreService>, Class<? extends AlitheiaCoreService>>();
 
-    static {
-        services = new Vector<Class<? extends AlitheiaCoreService>>();
-        implementations = new HashMap<Class<? extends AlitheiaCoreService>, Class<?>>();
-
-    	/* 
-    	 * Order matters here as services are initialised 
-    	 * in the order they appear in this list
-    	 */
-    	//The following two services are started manually
-    	//services.add(LogManager.class); 
-    	//services.add(DBService.class);	
-    	//All services after this point are guaranteed to have access to the DB 
-    	services.add(PluginAdmin.class);
-    	services.add(Scheduler.class);
-    	services.add(TDSService.class);
-    	services.add(ClusterNodeService.class);
-    	services.add(FDSService.class);
-    	services.add(MetricActivator.class);
-    	services.add(UpdaterService.class);
-    	services.add(WebadminService.class);
-    	services.add(RestService.class);
-    	services.add(AdminService.class);
-
-    	implementations.put(LogManager.class, LogManagerImpl.class);
-    	implementations.put(DBService.class, DBServiceImpl.class);	 
-    	implementations.put(PluginAdmin.class, PAServiceImpl.class);
-    	implementations.put(Scheduler.class, SchedulerServiceImpl.class);
-    	implementations.put(TDSService.class, TDSServiceImpl.class);
-    	implementations.put(ClusterNodeService.class, ClusterNodeServiceImpl.class);
-    	implementations.put(FDSService.class, FDSServiceImpl.class);
-    	implementations.put(MetricActivator.class, MetricActivatorImpl.class);
-    	implementations.put(UpdaterService.class, UpdaterServiceImpl.class);
-    	implementations.put(WebadminService.class, WebadminServiceImpl.class);
-        implementations.put(RestService.class, ResteasyServiceImpl.class);
-    	implementations.put(AdminService.class, AdminServiceImpl.class);
-    }
+    /** The locally stored SecurityManager instance */
+	private SecurityManager securityManager;
    
     /**
      * Simple constructor.
      * 
      * @param bc The parent bundle's context object.
      */
-    public AlitheiaCore(BundleContext bc) {
-        this.bc = bc;
-        instance = this;
-        err("Instance Created");
-        
-        instances = new HashMap<Class<? extends AlitheiaCoreService>, Object>();
-        init();
+    private AlitheiaCore() {
+    }
+    
+    private void registerBaseServices(){
+    	// Create LogManager and DBService before they are initialized
+    	this.createLogManager();
+    	this.createDBService();
+    	
+    	this.registerService(LogManager.class, LogManagerImpl.class);
+    	this.registerService(DBService.class, DBServiceImpl.class);	 
+    	this.registerService(PluginAdmin.class, PAServiceImpl.class);
+    	this.registerService(Scheduler.class, SchedulerServiceImpl.class);
+    	this.registerService(TDSService.class, TDSServiceImpl.class);
+    	this.registerService(ClusterNodeService.class, ClusterNodeServiceImpl.class);
+    	this.registerService(FDSService.class, FDSServiceImpl.class);
+    	this.registerService(MetricActivator.class, MetricActivatorImpl.class);
+    	this.registerService(UpdaterService.class, UpdaterServiceImpl.class);
+    	this.registerService(WebadminService.class, WebadminServiceImpl.class);
+    	this.registerService(RestService.class, ResteasyServiceImpl.class);
+    	this.registerService(AdminService.class, AdminServiceImpl.class);
+    }
+    
+    private void createLogManager(){
+    	logger = new LogManagerImpl();
+        logger.setInitParams(bc, null);
+        if (!logger.startUp()) {
+            err("Cannot start the log service, aborting");
+        }
+        instances.put(LogManager.class, logger);
+        err("Service " + LogManagerImpl.class.getName() + " started");
+    }
+    
+    private void createDBService() {
+    	DBService db = DBServiceImpl.getInstance();
+        db.setInitParams(bc, logger.createLogger("sqooss.db"));
+        if (!db.startUp()) {
+            err("Cannot start the DB service, aborting");
+        }
+        instances.put(DBService.class, db);
+        err("Service " + DBServiceImpl.class.getName() + " started");
     }
 
     /**
@@ -153,13 +156,18 @@ public class AlitheiaCore {
      * @return Instance, or null if it's not initialized yet
      */
     public static AlitheiaCore getInstance() {
+    	if (instance == null) instance = new AlitheiaCore();
         return instance;
     }
     
     /*Create a temp instance to use for testing.*/
     public static AlitheiaCore testInstance() {
-        instance = new AlitheiaCore(null);
-        return instance;
+    	// Create instance
+    	AlitheiaCore testInstance = AlitheiaCore.getInstance();
+    	// Logger should always exist
+    	testInstance.createLogManager();
+    	// Return instance
+    	return testInstance;
     }
     
     /**
@@ -171,11 +179,26 @@ public class AlitheiaCore {
      */
     public synchronized void registerService(
             Class<? extends AlitheiaCoreService> service,
-            Class<?> clazz) {
+            Class<? extends AlitheiaCoreService> implementation) {
 
-        if (!services.contains(service))
-            services.add(service);
-        implementations.put(service, clazz);
+    	// Add to the list of services of needed (to remember ordering)
+    	if(!services.contains(service)){
+    		services.add(service);
+    	}
+    	
+    	// Get the old implementaiton
+    	Class<? extends AlitheiaCoreService> old = implementations.get(service);
+    	
+    	// Add to implementation (or update the implementation)
+        implementations.put(service, implementation);
+    	
+    	// Check if implementation changed
+    	if(old != null && !old.equals(implementation)){
+    		// New implementation: remove instance
+    		instances.remove(service);
+    	}
+    	
+    	// Initialize the service
         initService(service);
     }
 
@@ -186,6 +209,7 @@ public class AlitheiaCore {
      */
     public synchronized void unregisterService(
             Class<? extends AlitheiaCoreService> service) {
+        services.remove(service);
         implementations.remove(service);
     }
 
@@ -195,34 +219,23 @@ public class AlitheiaCore {
      * method on their service interface. Failures are reported but do not 
      * block the instatiation process).
      */
-    private void init() {
+    public void init(BundleContext bc) {
+    	this.bc = bc;
+    	
+    	registerBaseServices();
 
-        err("Required services online, initialising");
-
-        logger = new LogManagerImpl();
-        logger.setInitParams(bc, null);
-        if (!logger.startUp()) {
-            err("Cannot start the log service, aborting");
-        }
-        instances.put(LogManager.class, logger);
-        err("Service " + LogManagerImpl.class.getName() + " started");
-
-        DBService db = DBServiceImpl.getInstance();
-        db.setInitParams(bc, logger.createLogger("sqooss.db"));
-        if (!db.startUp()) {
-            err("Cannot start the DB service, aborting");
-        }
-        instances.put(DBService.class, db);
-        err("Service " + DBServiceImpl.class.getName() + " started");
+        err("Required services online, initialising");        
 
         for (Class<? extends AlitheiaCoreService> s : services) {
             initService(s);
         }
-
     }
 
     private synchronized void initService(Class<? extends AlitheiaCoreService> s) {
-        Class<?> impl = implementations.get(s);
+    	// Do not initialize the service again
+    	if(instances.containsKey(s)) return;
+    	
+        Class<? extends AlitheiaCoreService> impl = implementations.get(s);
 
         if (impl == null) {
             err("No implementation found for service " + s);
@@ -230,7 +243,7 @@ public class AlitheiaCore {
         }
 
         try {
-            Object o = impl.newInstance();
+            AlitheiaCoreService o = impl.newInstance();
 
             if (o == null) {
                 err("Service object for service " + s
@@ -243,25 +256,39 @@ public class AlitheiaCore {
             String[] paths = s.getCanonicalName().split("\\.");
 
             /* Logger names are constructed as per */
-            s.cast(o).setInitParams(bc,
+            o.setInitParams(bc,
                     logger.createLogger("sqooss." + paths[3]));
 
-            if (!s.cast(o).startUp()) {
+            if (!o.startUp()) {
                 err("Service " + s + " could not be started");
                 return;
             }
 
-            instances.put(s, s.cast(o));
+            instances.put(s, o);
             err("Service " + impl.getName() + " started");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void shutDown() {
+    /**
+	 * Unused check of the core instance for liveness. Because the instance
+	 * might not lee without the rest of the bikini services, we need to
+	 * check that they are present.
+	 * Added after evening discussion (<i>some 5 pints and a bunch of naked
+	 * bikini models later<i>) at Amarilia on liveness.
+	 */
+	private static boolean canLee(boolean touLiBouDiBouDauTcou) {
+	    return (null != instance) && touLiBouDiBouDauTcou;
+	}
+
+	public void shutDown() {
+    	// Copy
     	List<Class<? extends AlitheiaCoreService>> revServices = 
     		new ArrayList<Class<? extends AlitheiaCoreService>>(services);
-    	Collections.reverse(revServices);
+    	
+    	// Reverse
+    	Collections.reverse(services);
     	
     	for (Class<? extends AlitheiaCoreService> s : revServices) {
     		Object o = instances.get(s);
@@ -273,6 +300,14 @@ public class AlitheiaCore {
 			}    		
     	}
 	}
+    
+    /**
+     * Returns the instance of the given service
+     */
+	@SuppressWarnings("unchecked")
+	public <T extends AlitheiaCoreService> T getService(Class<T> service){
+    	return (T) instances.get(service);
+    }
 
     /**
      * Returns the locally stored Logger component's instance.
@@ -280,7 +315,7 @@ public class AlitheiaCore {
      * @return The Logger component's instance.
      */
     public LogManager getLogManager() {
-        return (LogManager)instances.get(LogManager.class);
+    	return this.getService(LogManager.class);
     }
 
     /**
@@ -289,7 +324,7 @@ public class AlitheiaCore {
      * @return The WebAdmin component's instance.
      */
     public WebadminService getWebadminService() {
-        return (WebadminService)instances.get(WebadminService.class);
+    	return this.getService(WebadminService.class);
     }
 
     /**
@@ -298,7 +333,7 @@ public class AlitheiaCore {
      * @return The Plug-in Admin component's instance.
      */
     public PluginAdmin getPluginAdmin() {
-        return (PluginAdmin)instances.get(PluginAdmin.class);
+    	return this.getService(PluginAdmin.class);
     }
 
     /**
@@ -312,38 +347,23 @@ public class AlitheiaCore {
     }
     
     /**
-     * Unused check of the core instance for liveness. Because the instance
-     * might not lee without the rest of the bikini services, we need to
-     * check that they are present.
-     * Added after evening discussion (<i>some 5 pints and a bunch of naked
-     * bikini models later<i>) at Amarilia on liveness.
-     */
-    private static boolean canLee(boolean touLiBouDiBouDauTcou) {
-        return (null != instance) && touLiBouDiBouDauTcou;
-    }
-    
-    /**
      * Returns the locally stored FDS component's instance.
      * <br/>
-     * <i>The instance is created when this method is called for a first
-     * time.</i>
      * 
      * @return The FDS component's instance.
      */
     public FDSService getFDSService() {
-        return (FDSService)instances.get(FDSService.class);
+    	return this.getService(FDSService.class);
     }
 
     /**
      * Returns the locally stored Scheduler component's instance.
      * <br/>
-     * <i>The instance is created when this method is called for a first
-     * time.</i>
      * 
      * @return The Scheduler component's instance.
      */
     public Scheduler getScheduler() {
-        return (Scheduler)instances.get(Scheduler.class);
+    	return this.getService(Scheduler.class);
     }
 
     /**
@@ -355,7 +375,8 @@ public class AlitheiaCore {
      * @return The Security component's instance.
      */
     public SecurityManager getSecurityManager() {
-        return (SecurityManager)instances.get(SecurityManager.class);
+    	if (this.securityManager == null) this.securityManager = new SecurityManager();
+    	return this.securityManager;
     }
 
     /**
@@ -367,7 +388,7 @@ public class AlitheiaCore {
      * @return The TDS component's instance.
      */
     public TDSService getTDSService() {
-        return (TDSService)instances.get(TDSService.class);
+    	return this.getService(TDSService.class);
     }
 
     /**
@@ -379,7 +400,7 @@ public class AlitheiaCore {
      * @return The Updater component's instance.
      */
     public UpdaterService getUpdater() {
-        return (UpdaterService)instances.get(UpdaterService.class);
+    	return this.getService(UpdaterService.class);
     }
 
     /**
@@ -391,7 +412,7 @@ public class AlitheiaCore {
      * @return The ClusterNodeSerive component's instance.
      */
     public ClusterNodeService getClusterNodeService() {
-        return (ClusterNodeService)instances.get(ClusterNodeService.class);
+    	return this.getService(ClusterNodeService.class);
     }
 
     /**
@@ -403,7 +424,7 @@ public class AlitheiaCore {
      * @return The Metric Activator component's instance.
      */
     public MetricActivator getMetricActivator() {
-    	return (MetricActivator)instances.get(MetricActivator.class);
+    	return this.getService(MetricActivator.class);
     }
     
     /**
@@ -412,7 +433,7 @@ public class AlitheiaCore {
      * @return The Administration Service component's instance.
      */
     public AdminService getAdminService() {
-    	return (AdminService)instances.get(AdminService.class);
+    	return this.getService(AdminService.class);
     }
 	
 	private void err(String msg) {

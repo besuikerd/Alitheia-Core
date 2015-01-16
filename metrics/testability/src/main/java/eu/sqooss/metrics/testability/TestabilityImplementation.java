@@ -47,7 +47,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.MetricDecl;
 import eu.sqooss.service.abstractmetric.MetricDeclarations;
 import eu.sqooss.service.abstractmetric.Result;
@@ -60,7 +60,7 @@ import eu.sqooss.service.fds.FileTypeMatcher;
 @MetricDeclarations(metrics = {
 	@MetricDecl(mnemonic="TEST", descr="", activators={ProjectFile.class})
 })
-public class TestabilityImplementation extends AbstractMetric {
+public class TestabilityImplementation extends DefaultMetric {
 
     private FDSService fds;
 

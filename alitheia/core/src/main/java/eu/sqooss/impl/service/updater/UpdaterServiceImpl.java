@@ -47,10 +47,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.cluster.ClusterNodeActionException;
 import eu.sqooss.service.cluster.ClusterNodeService;
 import eu.sqooss.service.db.ClusterNode;
 import eu.sqooss.service.db.DBService;
@@ -67,7 +65,9 @@ import eu.sqooss.service.updater.MetadataUpdater;
 import eu.sqooss.service.updater.Updater;
 import eu.sqooss.service.updater.UpdaterService;
 import eu.sqooss.service.util.BidiMap;
-import eu.sqooss.service.util.GraphTS;
+import eu.sqooss.service.util.Graph;
+import eu.sqooss.service.util.GraphSorter;
+import eu.sqooss.service.util.TopologicalGraphSorter;
 
 public class UpdaterServiceImpl implements UpdaterService, JobStateListener {
 
@@ -365,8 +365,9 @@ public class UpdaterServiceImpl implements UpdaterService, JobStateListener {
                 // Topologically sort updaters within the same stage
                 List<Updater> updForStage = new ArrayList<Updater>();
                 updForStage.addAll(getUpdaters(project, us));
-                GraphTS<Updater> graph = 
-                    new GraphTS<Updater>(updForStage.size());
+                Graph<Updater> graph = new Graph<Updater>(updForStage.size());
+                GraphSorter<Updater> sorter = 
+                    new TopologicalGraphSorter<Updater>(graph);
                 BidiMap<Updater, Integer> idx = 
                     new BidiMap<Updater, Integer>();
 
@@ -396,7 +397,7 @@ public class UpdaterServiceImpl implements UpdaterService, JobStateListener {
                 }
 
                 // Topo-sort
-                updForStage = graph.topo();
+                updForStage = sorter.sort();
 
                 // We now have updaters in correct execution order
                 DependencyJob depJob = new DependencyJob(us.toString());

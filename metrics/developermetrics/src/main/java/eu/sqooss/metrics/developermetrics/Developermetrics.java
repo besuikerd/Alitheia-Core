@@ -37,7 +37,7 @@ import java.util.Set;
 
 import org.osgi.framework.BundleContext;
 
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
 import eu.sqooss.service.abstractmetric.MetricDeclarations;
@@ -65,7 +65,7 @@ import eu.sqooss.service.db.ProjectVersionMeasurement;
 		@MetricDecl(mnemonic="EYBALL", activators={ProjectFile.class}, descr="Number of developers that worked on a file"),
 		@MetricDecl(mnemonic="MODEYBALL", activators={ProjectDirectory.class}, descr="Number of developers that worked on a module")
 	})
-public class Developermetrics extends AbstractMetric {
+public class Developermetrics extends DefaultMetric {
     
     private static String MNEM_TEAMSIZE1 = "TEAMSIZE1";
     private static String MNEM_TEAMSIZE3 = "TEAMSIZE3";

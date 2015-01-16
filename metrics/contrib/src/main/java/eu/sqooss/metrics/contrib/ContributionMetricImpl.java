@@ -53,7 +53,7 @@ import eu.sqooss.metrics.contrib.ContributionActions.ActionCategory;
 import eu.sqooss.metrics.contrib.ContributionActions.ActionType;
 import eu.sqooss.metrics.contrib.db.ContribAction;
 import eu.sqooss.metrics.contrib.db.ContribActionType;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
@@ -83,6 +83,7 @@ import eu.sqooss.service.pa.PluginInfo;
 import eu.sqooss.service.tds.Diff;
 import eu.sqooss.service.tds.DiffChunk;
 import eu.sqooss.service.tds.SCMAccessor;
+import eu.sqooss.service.util.ProjectVersionDateUtils;
 
 @MetricDeclarations(metrics={
     @MetricDecl(mnemonic="CONTRIB", descr="Developer Contribution Metric",
@@ -90,7 +91,7 @@ import eu.sqooss.service.tds.SCMAccessor;
             activators={Developer.class, ProjectVersion.class, 
                         MailingListThread.class, Bug.class})
 })
-public class ContributionMetricImpl extends AbstractMetric {
+public class ContributionMetricImpl extends DefaultMetric {
 
      /** Number of files after which a commit is considered too big */
     public static final String CONFIG_CMF_THRES = "CMF_threshold";

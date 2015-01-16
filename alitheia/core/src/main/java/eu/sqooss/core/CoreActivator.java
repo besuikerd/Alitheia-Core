@@ -47,7 +47,8 @@ public class CoreActivator implements BundleActivator {
     private ServiceRegistration sregCore;
 
     public void start(BundleContext bc) throws Exception {
-        core = new AlitheiaCore(bc);
+        core = AlitheiaCore.getInstance();
+        core.init(bc);
         sregCore = bc.registerService(AlitheiaCore.class.getName(), core, null);
     }
   

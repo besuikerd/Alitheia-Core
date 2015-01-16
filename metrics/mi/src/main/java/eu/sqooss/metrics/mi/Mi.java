@@ -37,7 +37,7 @@ import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.AlitheiaPlugin;
 import eu.sqooss.service.abstractmetric.AlreadyProcessingException;
 import eu.sqooss.service.abstractmetric.MetricDecl;
@@ -70,7 +70,7 @@ import eu.sqooss.service.fds.FileTypeMatcher;
             dependencies={"Wc.loc", "Wc.locom", "EMCC_TOTAL", "HV", "ISSRCMOD"}, 
             descr="Maintainability Index for a module")
 })
-public class Mi extends AbstractMetric {
+public class Mi extends DefaultMetric {
     
     /*Metrics defined*/
     private static String MNEMONIC_MI = "MI";
@@ -217,54 +217,8 @@ public class Mi extends AbstractMetric {
 
     public void run(ProjectVersion pv) throws AlreadyProcessingException {
         
-        String paramIsDirectory = "is_directory";
-        String paramMNOL = "paramMNOL";
-        String paramISSRCDIR = "paramISSRCDIR";
-        String paramVersionId = "paramVersionId";
-        String paramProjectId = "paramProjectId";
-        String paramState = "paramStatus";
-        
-        StringBuffer q = new StringBuffer("select pfm ");
-        Map<String,Object> params = new HashMap<String,Object>();
-
-        if (pv.getSequence() == ProjectVersion.getLastProjectVersion(pv.getProject()).getSequence()) {
-            q.append(" from ProjectFile pf, ProjectFileMeasurement pfm");
-            q.append(" where pf.validUntil is null ");
-        } else {
-            q.append(" from ProjectVersion pv, ProjectVersion pv2,");
-            q.append(" ProjectVersion pv3, ProjectFile pf, ");
-            q.append(" ProjectFileMeasurement pfm ");
-            q.append(" where pv.project.id = :").append(paramProjectId);
-            q.append(" and pv.id = :").append(paramVersionId);
-            q.append(" and pv2.project.id = :").append(paramProjectId);
-            q.append(" and pv3.project.id = :").append(paramProjectId);
-            q.append(" and pf.validFrom.id = pv2.id");
-            q.append(" and pf.validUntil.id = pv3.id");
-            q.append(" and pv2.sequence <= pv.sequence");
-            q.append(" and pv3.sequence >= pv.sequence");
-           
-            params.put(paramProjectId, pv.getProject().getId());
-            params.put(paramVersionId, pv.getId());
-        }
-        
-        q.append(" and pf.state <> :").append(paramState);
-        q.append(" and pf.isDirectory = :").append(paramIsDirectory);
-        q.append(" and pfm.projectFile = pf");
-        q.append(" and pfm.metric = :").append(paramMNOL);
-        q.append(" and exists (select pfm1 ");
-        q.append(" from ProjectFileMeasurement pfm1 ");
-        q.append(" where pfm1.projectFile = pfm.projectFile ");
-        q.append(" and pfm1.metric = :").append(paramISSRCDIR).append(")");
-        
-
-        params.put(paramState, ProjectFileState.deleted());
-        params.put(paramIsDirectory, true);
-        params.put(paramMNOL, Metric.getMetricByMnemonic(MNEMONIC_MODMI));
-        params.put(paramISSRCDIR, Metric.getMetricByMnemonic(MNEM_ISSRC));
-        
         // Get the list of folders which exist in this project version.
-        List<ProjectFileMeasurement> srcDirs = 
-            (List<ProjectFileMeasurement>) db.doHQL(q.toString(), params);
+        List<ProjectFileMeasurement> srcDirs = QRY_SOURCE_DIRS(pv, MNEMONIC_MODMI, MNEM_ISSRC);
 
         // Calculate the metric results
         double miTotal = 0;

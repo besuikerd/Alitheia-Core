@@ -15,7 +15,7 @@ import org.antlr.runtime.tree.Tree;
 import org.osgi.framework.BundleContext;
 
 import eu.sqooss.core.AlitheiaCore;
-import eu.sqooss.service.abstractmetric.AbstractMetric;
+import eu.sqooss.service.abstractmetric.DefaultMetric;
 import eu.sqooss.service.abstractmetric.MetricDecl;
 import eu.sqooss.service.abstractmetric.MetricDeclarations;
 import eu.sqooss.service.abstractmetric.Result;
@@ -45,7 +45,7 @@ import eu.sqooss.service.scheduler.SchedulerException;
   @MetricDecl(mnemonic = "NPM", activators = {EncapsulationUnit.class, ProjectVersion.class}, descr = "Number of Public Methods")
 })
 @SchedulerHints(activationOrder = {ProjectVersion.class, EncapsulationUnit.class})
-public class JavaMetrics extends AbstractMetric {
+public class JavaMetrics extends DefaultMetric {
 
     private List<ProjectFile> changedFiles;
     private ProjectVersion pv;

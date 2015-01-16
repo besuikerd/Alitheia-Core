@@ -143,7 +143,7 @@ public class LogManagerImpl implements LogManager {
         PropertyConfigurator.configure(p);
         org.apache.log4j.Logger.getRootLogger().info("Logging initialized.");
         CyclicLogger l = new CyclicLogger();
-        String pattern = bc.getProperty("eu.sqooss.logbuffer.pattern");
+        String pattern = bc != null ? bc.getProperty("eu.sqooss.logbuffer.pattern") : null;
         if (pattern != null) {
             org.apache.log4j.Logger.getRootLogger().info("Logging to buffer with pattern <" + pattern + ">");
             l.setLayout(new PatternLayout(pattern));

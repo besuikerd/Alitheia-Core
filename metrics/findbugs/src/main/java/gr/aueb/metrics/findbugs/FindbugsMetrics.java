@@ -111,7 +111,7 @@ import javax.xml.xpath.*;
 @MetricDecl(mnemonic = "TMSBF",    activators = {ProjectVersion.class}, descr = "MS: Field isn't final but should be (total)")
 })
 @SchedulerHints(invocationOrder = InvocationOrder.NEWFIRST, activationOrder = {ProjectVersion.class})
-public class FindbugsMetrics extends AbstractMetric {
+public class FindbugsMetrics extends DefaultMetric {
 
     static String MAVEN_PATH = "";
     static String ANT_PATH = "";
