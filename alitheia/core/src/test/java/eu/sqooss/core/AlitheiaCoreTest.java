@@ -21,6 +21,7 @@ public class AlitheiaCoreTest {
 		AlitheiaCore instance = AlitheiaCore.testInstance();
 		
 		assertNull(instance.getAdminService());
+		assertNull(instance.getService(AdminService.class));
 		
 		// Register a standard service
 		instance.registerService(AdminService.class, AdminServiceImpl.class);

@@ -88,7 +88,7 @@ public class AlitheiaCore {
     private static AlitheiaCore instance = null;
     
     /** Holds initialised service instances */
-    private HashMap<Class<? extends AlitheiaCoreService>, AlitheiaCoreService> instances = new HashMap<Class<? extends AlitheiaCoreService>, AlitheiaCoreService>();
+    private Map<Class<? extends AlitheiaCoreService>, AlitheiaCoreService> instances = new HashMap<Class<? extends AlitheiaCoreService>, AlitheiaCoreService>();
     
     /** Contains the registered services in the order of initialization */
     private List<Class<? extends AlitheiaCoreService>> services = new ArrayList<Class<? extends AlitheiaCoreService>>();
